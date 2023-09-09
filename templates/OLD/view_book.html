@@ -1,0 +1,242 @@
+{% extends "common.html" %}
+{% block content %}
+{% load custom_tags %}
+
+<link href="/static/geoui/slidermenu.css" rel="stylesheet" />
+<script src="/static/geoui/slidermenu.js"></script>
+<link  href="/static/geoui/splitter1.css" rel="stylesheet" />
+<script src="/static/geoui/splitter1.js"></script>
+<script type="text/javascript" src="/static/bower_components/simplemde/debug/simplemde.js"></script>
+<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"> </script>
+<style>
+
+#sidebar {
+    min-width: 250px;
+    mmax-width: 300px;
+    width: 250px;
+    background-color: #f0f1f4;
+    height: 90vh;
+}
+#first {
+    width: 100%;
+    min-width: 300px;
+    overflow: auto;
+}
+
+#second {
+    min-width: 10px;
+    background-color: #f0f1f4;
+    box-shadow: -2px 2px 0px 0px lightgrey;
+    min-height: calc(100% - (1px));
+    padding-top: 10px;
+    padding-left: 10px;
+    box-shadow: -1px 0px 20px 1px #cccccc;
+}
+
+#viewcontent {
+    max-width: 1024px;
+    margin: auto;
+    margin-top: .75in;
+    margin-bottom: 1.5in;
+    text-align: left;
+    padding-left: 20px;
+}
+
+@media print {
+    #first {
+        display: contents;
+    }
+    #second {
+        display: none;
+    }
+}
+.divb{
+    padding:20px;width:130px;padding:0; margin: 0;
+    text-align: center !important;
+    display: inline-flex;
+}
+.divb1 {
+      box-shadow: -1px 0px 20px 1px #cccccc;
+}
+.imgb {
+    border-radius: 10px 10px 0px 0px;
+    width: 100px;
+}
+</style>
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    HTML
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -->
+<input name="viewbook"  id="viewbook" size=200 hidden value="" >
+<input name="viewpage"  id="viewpage" size=200 hidden value="" >
+<input name="type"      id="type"     hidden value="" >
+<input name="edit"      id="edit"     hidden value="" >
+<textarea id="contents"   style="display: none" ></textarea>
+
+<script>
+books=[
+{   name: "Time Series", id: 'sada.narayanappa/time_series.md',
+    img: 'https://images-na.ssl-images-amazon.com/images/I/51JGSKZMbAL._SX316_BO1,204,203,200_.jpg',
+    href: '/blogs/view_book.html/?viewbook=time_series.md#'
+}
+]
+html = ""
+for (var i in books){
+}
+</script>
+<div id="bookshop"  style="padding: 10px; display: none;">
+    <div class="divb" onmouseover="$(this).addClass('divb1')" onmouseout="$(this).removeClass('divb1')">
+    <a href="/blogs/view_book.html/?viewbook=sada.narayanappa/books/time_series.md#">
+    <img class="imgb" src='/static/media/tseries.png'>
+    <span style="font-size: smaller;">Time Series Analysis, 2021</span>
+    </a>
+    </div>
+
+    <div class="divb" onmouseover="$(this).addClass('divb1')" onmouseout="$(this).removeClass('divb1')">
+    <a href="/blogs/view_book.html/?viewbook=sada.narayanappa/books/nnetworks.md#">
+    <img class="imgb" src='/static/media/nnetworks.png'>
+    <span style="font-size: smaller;">Artificial Neural Networks, 2021</span>
+    </a>
+    </div>
+<hr/>
+</div>
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<div class="splitter" style="height: calc(100% - (48px));">
+    <div id="first" >
+        <div id="viewcontent">Contents</div>
+    </div>
+<div id="separator1" class="separatorH" >.</div>
+    <div id="second" >
+        <span style="font-weight: bold; font-size: medium;"> Table of Contents &nbsp;&nbsp;&nbsp;</span>
+        <a href='#' onclick="toggleDiv('bookshop')">Books List</a>
+        <hr/>
+        <div id="books"  class="scroller"  style="overflow-y: auto;min-height: 50vh; "></div>
+    </div>
+</div>
+
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    SCRIPT
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -->
+<script>
+simplemde = new SimpleMDE({element: null });
+function md2html(val, ext, div){
+    var html  = simplemde.markdown(val);
+    if ( div ) {
+        $(div).html(ext + html)
+
+        if (typeof  MathJax !== 'undefined' ) {
+        MathJax.Hub.Config({
+            tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+              processEscapes: true
+            }
+          });
+            MathJax.Hub.Queue(["Typeset",MathJax.Hub, document.getElementById(div.substring(1))]);
+        }
+    }
+    return html
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function viewCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    val = responseTxt;
+    if (responseTxt.trim().startsWith("{")) {
+        ret = JSON.parse(responseTxt);
+        val = ret[0]
+    }
+    var eval1 = " <a style='float:right;' href='#' onclick=$('#second').fadeToggle()> <i class='fa fa-bars'></i></a> " +
+         $('#edit').val()
+    md2html(val, eval1, '#viewcontent' )
+}
+function view(viewid, type="md|text|elastic|capstone"){
+    type = type.substr(0,2) || "md";
+
+    if ( type === "md") {
+        var file = viewid
+        if ( !file.endsWith(".md"))
+            file = file + ".md"
+        if ( !file.indexOf("/") < 0)
+            file = "/uploaded/{{ user.username }}/" + file
+        else if ( file.indexOf("uploaded/") < 0)
+            file = "/uploaded/" + file
+
+        var href = "/blogs/secured/create_article.html/?file="+ file;
+        //if ({{ request.user| has_group:"editcapstone"}}) {
+        //    var e= `<a style="float:right;color: #fff" class="btn btn-secondary" target="cap" href="${href}"><i class="fas fa-edit"></i></a>`
+        //    $('#edit').val(e)
+        //}
+
+        if ({{ request | can_edit:"viewid" }}) {
+            var e= `<a style="float:right;float:right" target="cap" href="${href}" title="${href}">
+                    <i class="fas fa-edit"></i>
+                </a>`
+            $('#edit').val(e)
+        }
+        $('#viewpage').val(file)
+        const URL1  = `/api1/getfile/?file=${file}`
+
+        $.get(URL1, viewCB )
+
+        var wl = window.location.href
+        if ( wl.endsWith('#'))
+            wl = wl.slice(0, -1)
+        wl = wl.split('&viewpage=')[0]
+        wl += "&viewpage="+file;
+        window.history.pushState(null,null,wl)
+
+    }
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+const BM_LOCATION = "uploaded/books/"
+function getBMfilecontentsCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    $("#contents").val(responseTxt);
+    getmenu($('#contents').val(), '#books', "", false)
+    menuExpandAll()
+    if ( $('#viewpage').val() )
+        view($('#viewpage').val())
+}
+function getBMfilecontents(f){
+    if (f.indexOf("/") < 0)
+        f = BM_LOCATION + f;
+    else
+        f = "uploaded/" + f
+
+    const URL1  = `/api1/getfile/?file=${f}`
+    $.get(URL1, getBMfilecontentsCB )
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function myMenuItemClicked(d , a){
+    view(d);
+    console.log("In viewbook.html:myMenuItemClicked: ", d);
+    _sliderMenu_DefaultMenuItemClicked(d,a)
+
+/*    menusetActive(a);
+    var e = window.event;
+    var c = e.target.offsetLeft + e.target.offsetWidth
+    if ( c - e.x > 50 )
+        window.event.stopPropagation()
+*/
+}
+
+$(document).ready(function()  {
+    var urlp     = new URL(window.location.href)
+    var viewbook =  urlp.searchParams.get('viewbook')  || ""
+    var viewpage =  (viewbook && urlp.searchParams.get('viewpage'))  || ""
+
+    menuItemClicked = myMenuItemClicked
+    $('#viewbook').val(viewbook)
+    $('#viewpage').val(viewpage)
+    if (viewbook)
+        getBMfilecontents(viewbook)
+    else
+        $('#bookshop').slideDown()
+})
+</script>
+
+{% endblock %}

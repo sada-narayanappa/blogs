@@ -1,0 +1,373 @@
+{% extends "common.html" %}
+{% block content %}
+<link rel="stylesheet" href="/static/bower_components/simplemde/debug/simplemde.css">
+<script src="/static/bower_components/simplemde/debug/simplemde.js"></script>
+<link href="/static/geoui/jquery-tabs.css" rel="stylesheet" />
+<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"> </script>
+<style>
+
+.ui-slider-horizontal .ui-slider-range {
+    top: 0;
+    height: 100%;
+    background: gray;
+}
+
+.center {         text-align: center    }
+.fullWidth {      width: 100%    }
+.fullHeight {     height: 100%;  overflow: auto   }
+.resize {         width: 80%    }
+.left {        text-align: left;    }
+.right {        text-align: right;    }
+.bordered {        border: dashed;    }
+.borderBlack {     border-color: black; }
+.borderRed {       border: dashed; border-color: red;   }
+.thinBorder {      border: dashed 1px #000;   }
+.color {
+    -color: #DDD     }
+.double {         colspan: "2"    }
+.margin {        margin: 2px;    }
+textarea { resize: vertical;   font-size: 12px  }
+.failed {  background-color: LightCoral }
+input:invalid {        border: 2px solid red;    }
+.stitle {
+    font-family: 'Roboto',arial,sans-serif;
+    padding: 0px;
+    color:#1a0dab !important;
+    ccolor:firebrick !important;
+    font-size: 18px;
+    line-height: 18px;
+    }
+.smeta  {
+    font-size: 12px;
+    color: green;
+    line-height: 2em;
+    margin: 0px;
+    padding: 0px;
+}
+.abstract {
+    font-family: 'Roboto',arial,sans-serif;
+    padding: 0px;
+    margin: 0px;
+    font-size: 14px;
+    line-height: 1.4em;
+}
+
+.pdf
+{
+  padding-left: 24px;
+  background-image: url(/static/imgs/pdf.jpeg);
+  background-size: 16px;
+  background-repeat:no-repeat;
+}
+
+.doc
+{
+  padding-left: 24px;
+  background-image: url(/static/imgs/doc.png);
+  background-size: 16px;
+  background-repeat:no-repeat;
+}
+
+.ppt
+{
+  padding-left: 24px;
+  background-image: url(/static/imgs/ppt.png);
+  background-size: 16px;
+  background-repeat:no-repeat;
+}
+.url
+{
+  padding-left: 24px;
+  background-image: url(/static/imgs/url.png);
+  background-size: 16px;
+  background-repeat:no-repeat;
+}
+.info
+{
+  padding-left: 24px;
+  background-size: 16px;
+  background-repeat:no-repeat;
+    min-height: 20px;
+}
+
+.loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+#viewdocdiv {
+    padding:10px;display: none;
+    position: fixed;
+    top: 0px;
+    right:0;
+    width:70%;
+    max-width:1268px;
+    min-height:100%;
+    background: ghostwhite;
+    overflow: auto;
+    z-index: 10;
+    height: 100vh;
+}
+
+.tabs .ui-widget-header{
+    background: white;
+    border: 0px;
+
+}
+</style>
+    <br/>
+<center><H6> Geo Spaces - MEGA DATA SYSTEMS </H6> </center>
+<br/>
+<br/>
+<div class="center">
+    <b><span id="label_ifx">Search:</span></b>
+    <input type="text"  id="stext" onkeypress="handle(event)"  placeholder="what is your search" value="" style="height:40px;width: 50%" >
+    <button onclick="search()" class="btn btn-primary">GO</button> <br/>
+    <a href="/blogs/secured/create_article1.html"><i class="far fa-plus-square"></i> create</a> &nbsp;&nbsp|&nbsp;&nbsp;
+    <a href="/payment/stripepay/donate/"><i class="fas fa-hand-holding-usd"></i>Donate</a>
+    <br/>
+    <br/>
+        <div class="custom-control custom-switch" style="width:100px;display: inline-block; ">
+          <input type="checkbox" class="custom-control-input" id="Google" unchecked>
+          <label class="custom-control-label" for="Google" style="vertical-align: baseline">Google</label>
+        </div>
+        <div class="custom-control custom-switch" style="width:100px;display: inline-block; ">
+          <input type="checkbox" class="custom-control-input" id="news" unchecked>
+          <label class="custom-control-label" for="news" style="vertical-align: baseline">News</label>
+        </div>
+        Published Date: &nbsp;&nbsp;&nbsp; <div id="slider-range" style="width:100px;display: inline-block;"></div>
+        &nbsp;&nbsp;&nbsp;<span id="time"></span>
+    <br/>
+</div>
+<br/>
+<div class="info" id="message">&nbsp;&nbsp;&nbsp;</div>
+<div id="tabs" class=tabs>
+  <ul>
+    <li><a href="#tabs-home"  > Home</a></li>
+    <li><a href="#tabs-search"> Search Geospaces</a></li>
+    <li><a href="#tabs-google"> Google</a></li>
+    <!-- <li><a href="#tabs-news"  > News</a></li> -->
+  </ul>
+    <div style="width:100%; height: 1px; background: #efefef"> </div>
+
+    <div class="row">
+          <div class="col-md-8">
+          <div id="tabs-search" style="padding-left: 20px;" ></div>
+          </div>
+          <!-- div id="tabs-news"   style="padding-left: 20px;" >Search from News Mashups</div -->
+          <div id="tabs-google" style="padding-left: 20px;" >Google Search Results</div>
+          <div id="tabs-home" style="padding-left: 20px;" >
+              {% include "index-home.html" %}
+              {% include "footer.html" %}
+          </div>
+          <!-- <div id="tabs-news" style="padding-left: 20px;" > News </div> -->
+
+        <div id="auxinfo" class="col-md-4"></div>
+    </div>
+</div>
+<div id="viewdocdiv" onmouseleave="viewdocHide()"  >
+    <div style="padding: 3px;">
+        <a onclick="$('#viewdocdiv').hide()">Close <i class="fa fa-crosshairs"></i></a>
+    </div>
+    <div style="width:100%; height: 1px; background: #efefef"> </div><br/>
+    <div id="vdoc"></div>
+</div>
+
+<script>
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function viewdocHide(e) {
+    $('#viewdocdiv').hide();
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function handle(e){
+    if(e && e.keyCode === 13){
+        e.preventDefault(); // Ensure it is only this code that runs
+        search()
+    }
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$("#slider-range").slider({
+        range: true,
+        min: 0,
+        max: Date.now(),
+        values: [0, Date.now()],
+        slide: slideTime
+    });
+function slideTime(event, ui){
+    val0 = $("#slider-range").slider("values", 0)
+    val1 = $("#slider-range").slider("values", 1)
+    d1 = new Date(val0)
+    d2 = new Date(val1)
+
+    ra = d1.toISOString().split('T')[0] +":"+ d2.toISOString().split('T')[0]
+    $("#time").text(ra );
+    return [d1,d2]
+}
+slideTime()
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+countries = ["australia", "austria", "antartica", "argentina", "algeria"];
+$('#stext').autocomplete({
+    autoFocus: true,
+    minLength: 2,
+    source: countries,                      // Local Searches
+    source1: function(request, response) {  //Customized Local search
+        response(countries);
+    },
+    source: function(request, response) {  //REST call
+        //console.log(request.term, response)
+        var term = request.term.trim()
+        if ( term.length > 15 || term.length <= 0 )
+            return
+        if (term.length < 4)
+            term +='*';
+
+        u = `/suggest/?q=${term}&user={{user.username}}`
+        $.get(u, function(d){
+                try{
+                    var ret = JSON.parse(d)
+                    term = term.endsWith('*') ? term.slice(0, -1) : term;
+                    ret.splice(0,0,term)
+                    ret[ret.length] = term;
+                    response(ret)
+                } catch(e){
+                    console.log(d , e)
+                }
+            })
+    },
+    select: function (event, item) {
+        //console.log("==> Searched for: ",item.item.value)
+        $("#stext").val(item.item.value);
+    }
+  });
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function rateInternalDoc(rating, id) {
+    rid=id
+
+    mid = id.option()['id']
+    $('#message').html(`setting ${mid} to ${rating} !!`)
+    ur = `/updatevote?docid=${mid}&score=${rating}&user={{user.username}}`
+    console.log(ur)
+    //$.get(ur, null);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function searchCB(tabid, responseTxt, statusTxt, xhr){
+    if(statusTxt !== "success"){
+        //$('#tabs-1').html(results + " Error Loading results <br/>" + statusTxt +"<br/>" + responseTxt)
+        $(tabid).html(results + " Error Loading results <br/>" + statusTxt +"<br/>" + responseTxt)
+        return  0;
+    }
+    $( "#tabs" ).tabs({ active: 1 });
+    $(tabid).html( responseTxt)
+}
+function search() {
+    saveZZValues()
+    var stxt = $('#stext').val();
+    var d = new Date();
+    var n = d.toLocaleString();
+    var results =` Search results for:  <b> ${stxt} </b> <b>{{user.username}}</b> @: ${n}`;
+    $(message).html(results)
+
+    d=$("#time").text().split(':');
+    var st = encodeURIComponent(stxt);
+    var cb = searchCB.bind(null, '#tabs-search')
+    var pd = GET_POSTDATA({q:st, d1: d[0].trim(), d2: d[1].trim()})
+    $.post(`/essearch/`, pd, cb);
+
+    if ($('#Google')[0].checked ) {
+        var tabid ='#tabs-google'
+        $(tabid).html("Started Search" + results + "<br/> Please wait ... <div class=loader></div>")
+        cb = searchCB.bind(null, tabid)
+        $.post(`/ggsearch/`,pd, cb);
+    }
+}
+//-----------------------------------------------------------------------------------------------
+var simplemde = new SimpleMDE({ element: document.getElementById("") });
+var d
+function vformat(d){
+    if (d._source.type === 'mdd' || d._source.type === 'md'){
+        html = simplemde.markdown(d._source.content);
+        ret  =  html
+    } else {
+        ret = `
+        <pre>
+            ${d._id}
+            ${d._source.content}
+        </pre>`
+    }
+    return ret
+}
+function viewDocCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt) ) {
+        return
+    }
+    g = JSON.parse(responseTxt)
+    if (g.total < 1){
+        alert("Document not found")
+        return
+    }
+    d = g.hits[0]
+    $('#viewdocdiv').show()
+    $('#vdoc').html(vformat(d))
+
+    if (typeof  MathJax !== 'undefined' ) {
+        MathJax.Hub.Config({
+            tex2jax: {
+                inlineMath:       [ ['$','$'], ["\\(","\\)"] ],
+                equationNumbers:  { autoNumber: "AMS" } ,
+                processEscapes:   true
+            },
+            TeX: { equationNumbers: { autoNumber: "AMS" } }
+          });
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub, document.getElementById('vdoc')]);
+    }
+}
+function viewDoc(id) {
+    var url =`/essearchbyid/?ids=${id}`
+    $.get( url, viewDocCB)
+}
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function viewdetails(id, author, editors) {
+    var lid = id.split("/").pop()
+    document.location=`/blogs/view_article1.html/?viewid=${lid}`
+}
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function edit(id, author, editors) {
+    ok = 0
+    if ( author == '{{user.get_username}}' || author == ''  ) {
+        ok = 1
+    } else if ( editors ){
+        edt = editors.split(",")
+        for (var c in edt) {
+            if ('{{user.get_username}}' == c) {
+                ok = 1
+                break
+            }
+        }
+    } else if ( id.indexOf('{{user.get_username}}' + "-")  >= 0) {
+        ok = 1
+    }
+
+    if ( !ok ){
+        alert( "You are not authorized to edit this document ")
+        return
+    }
+    var ids = id.split("/")
+    ids = ids[ids.length-1]
+    window.location.href = `/blogs/secured/create_article1.html/?file=${ids}`
+}
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$(document).ready(function() {
+    restoreZZValues()
+    document.getElementById("stext").focus();
+
+    $( "#tabs" ).tabs();
+
+
+})
+</script>
+{% endblock %}

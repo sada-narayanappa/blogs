@@ -1,0 +1,199 @@
+<script src="/static/bower_components/simplemde/debug/simplemde.js"></script>
+<link rel="stylesheet" href="/static/bower_components/codemirror/lib/codemirror.css">
+<link  href="/static/geoui/splitter1.css" rel="stylesheet" />
+<script src="/static/geoui/splitter1.js"></script>
+
+<script src="/static/bower_components/codemirror/lib/codemirror.js"></script>
+  <script src="/static/bower_components/codemirror/lib/codemirror.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/foldcode.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/foldgutter.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/brace-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/xml-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/indent-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/markdown-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/comment-fold.js"></script>
+  <script src="/static/bower_components/codemirror/mode/javascript/javascript.js"></script>
+  <script src="/static/bower_components/codemirror/mode/xml/xml.js"></script>
+  <script src="/static/bower_components/codemirror/mode/css/css.js"></script>
+  <script src="/static/bower_components/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+  <script src="/static/bower_components/codemirror/mode/python/python.js"></script>
+  <script src="/static/bower_components/codemirror/mode/markdown/markdown.js"></script>
+<style>
+.CodeMirror, .CodeMirror-scroll {
+        height: 100%;
+}
+#first {
+    width: 50%;
+    height: max-content;
+    min-width: 10px;
+    border-radius: 4px 4px 0 0 ;
+    border: 1px solid rgba(50, 50, 93, 0.1);
+}
+
+#second {
+    background-color: white;
+    border-radius: 4px 4px 0 0 ;
+    border: 1px solid rgba(50, 50, 93, 0.1);
+    width: 50%;
+    height: fit-content;
+    overflow: auto;
+    padding-top: 30px;
+    text-align: -webkit-center;
+}
+
+#second-content {
+    text-align: initial;
+    max-width: 850px;
+}
+</style>
+
+<div id="articles" class="splitter" style="height:100%;position:relative; overflow: auto; overflow-y: auto">
+    <div id="first" style="height: 100%;overflow: auto;">
+        <textarea name='content' id="editor" style="width:100%; height: 100%; resize: none;">{% include "samplemd.html" %}
+        </textarea>
+    </div>
+    <div id="separator2" class="separatorH" >.</div>
+    <div id="second" style="height: 100%; overflow: auto;"  >
+        <div id="second-content">
+        </div>
+    </div>
+</div>
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<script>
+var simplemde = null
+function update(val){
+    if (!simplemde) {
+        simplemde = new SimpleMDE({ element: document.getElementById("") });
+    }
+    if (val)
+        window.editor_markdown.setValue(val)
+    val = val || window.editor_markdown.getValue()
+    var html  = simplemde.markdown(val);
+    $('#second-content').html(html)
+
+    geoui_setupMATHJAX('vdoc')
+
+    var data = localStorage.setItem("blog_content", val);
+    setTimeout(geoui_scrollTo, 50);
+
+    return html
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function saveMDcontentsCB(responseTxt, statusTxt, xhr, context, formdata){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    salert(responseTxt)
+}
+
+function saveMDcontents( ){
+    var dir  = $('#X_dir').val()
+    var file = dir +"/" + $('#X_filename').val()
+    var tit = $('#X_title').val()
+
+    var val = window.editor_markdown.getValue()
+    val  = val.replace(/‣/g, '')
+
+    var vcu = window.editor_markdown.getCursor()
+    var nId = geoui_nthIndex(val, '\n', vcu.line )
+
+    if ( nId > 0){
+        //val = val.slice(0, nId+1) + `‣<div id=ZZZLASTEDIT ${vcu.line} />` + val.slice(nId+1)
+        val = val.slice(0, nId) + `‣\n` + val.slice(nId+1)
+    }
+
+    console.log("SaveMDcontents", data)
+    data = { contents: val, cfilename: file , title: tit, savein: dir}
+    callws('/blogs/savearticle/', "fileupload", saveMDcontentsCB, data )
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function restoreFromLocalStorage(){
+    var data = localStorage.getItem("blog_content");
+    if (data && data.trim().length > 10) {
+        update(data)
+    }
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+var te_markdown = document.getElementById("editor");
+window.editor_markdown = CodeMirror.fromTextArea(te_markdown, {
+    mode: "markdown",
+    lineNumbers: true,
+    lineWrapping: true,
+    extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()); }},
+    foldGutter: true,
+    gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+    onChange: function (cm) {
+        console.log('sada')
+    }
+})
+window.editor_markdown.on("keyup", (function(cm, event) {
+    sw = parseInt($('#second').css('width'))
+    fw = parseInt($('#first' ).css('width'))
+    if ( (event.key === "s" || event.key === "S") && (event.metaKey) ){
+        update()
+    }
+
+    if (sw < .25 * fw){ // if preview is too small to see changes
+        console.log(fw, sw, 0.25 * fw)
+        return
+    }
+    if ( event.keyCode <= 13 || [ 32].includes(event.keyCode) ) {
+        update()
+    }
+}));
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+document.addEventListener("keydown", function(e) {
+    if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)  && e.keyCode == 83) {
+        e.preventDefault();
+        // Process the event here (such as click on submit button)
+        saveMDcontents()
+    }
+}, false);
+
+if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
+    textareas = document.getElementsByTagName('textarea');
+    for(var i = 0; i < textareas.length; i++){
+        textareas[i].style['padding-left'] = '13px';
+        textareas[i].style['padding-right'] = '13px';
+    }
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function setupContentsCB(responseTxt, statusTxt, xhr, ctx, formdata){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    console.log(responseTxt.slice(0,64))
+    if (!responseTxt.trim().startsWith("{")) {
+        salert(responseTxt)
+        update(responseTxt)
+        return
+    }
+
+    var ret = JSON.parse(responseTxt);
+
+    $('#X_title').val(ret.title)
+    $('#X_dir').val(ret.dir)
+    $('#X_filename').val(ctx.file)
+
+    var cont = ret.content || "Create Your content Here"
+    update(cont)
+}
+function setupContents(file){
+    var urlp = new URL(window.location.href)
+    file = file || urlp.searchParams.get('file') || urlp.searchParams.get('viewid')
+
+    if (file){
+        ctx ={ file: file}
+        callws("/blogs/getarticle/", "", setupContentsCB, ctx )
+    } else {
+        var dttm = (new Date()).toISOString()
+        dttm = dttm.substring(0,19) + "Z"
+        var file = `{{user.username}}-${dttm}.md`
+        $('#X_filename').val(file)
+        $('#X_filename').prop('disabled', 0)
+        update()
+    }
+    return file;
+}
+</script>

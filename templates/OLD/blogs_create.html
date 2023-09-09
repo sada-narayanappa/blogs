@@ -1,0 +1,379 @@
+{% extends "common.html" %}
+{% block content %}
+<script src="/static/bower_components/simplemde/debug/simplemde.js"></script>
+<link rel="stylesheet" href="/static/bower_components/codemirror/lib/codemirror.css">
+<link  href="/static/geoui/splitter1.css" rel="stylesheet" />
+<script src="/static/geoui/splitter1.js"></script>
+<link href="/static/geoui/jquery-tabs.css" rel="stylesheet" />
+<link href="/static/geoui/slidermenu.css" rel="stylesheet" />
+<script src="/static/geoui/slidermenu.js"></script>
+
+<script src="/static/bower_components/codemirror/lib/codemirror.js"></script>
+  <script src="/static/bower_components/codemirror/lib/codemirror.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/foldcode.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/foldgutter.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/brace-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/xml-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/indent-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/markdown-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/comment-fold.js"></script>
+  <script src="/static/bower_components/codemirror/mode/javascript/javascript.js"></script>
+  <script src="/static/bower_components/codemirror/mode/xml/xml.js"></script>
+  <script src="/static/bower_components/codemirror/mode/css/css.js"></script>
+  <script src="/static/bower_components/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+  <script src="/static/bower_components/codemirror/mode/python/python.js"></script>
+  <script src="/static/bower_components/codemirror/mode/markdown/markdown.js"></script>
+<style>
+.CodeMirror, .CodeMirror-scroll {
+        height: 100%;
+}
+
+#first {
+    width: 50%;
+    height: max-content;
+    min-width: 10px;
+    border-radius: 4px 4px 0 0 ;
+    border: 1px solid rgba(50, 50, 93, 0.1);
+}
+
+#second {
+    background-color: white;
+    border-radius: 4px 4px 0 0 ;
+    border: 1px solid rgba(50, 50, 93, 0.1);
+
+    width: 50%;
+    height: fit-content;
+    overflow: auto;
+    padding-top: 30px;
+
+    text-align: -webkit-center;
+}
+
+#second-content {
+    text-align: initial;
+    max-width: 800px;
+}
+</style>
+<form id="file_form" name="file_form" method="post" action='/api1/uploadfile/' enctype="multipart/form-data">
+<div style="width:100%;height:40px; background: white;padding-left: 15px;vertical-align: middle; display: table; border-bottom: 1px solid #f0f0f0;">
+    <div class="row">
+        <div class="col-md-6">
+            <a href=# onclick="toggleDiv('#menu')"><i class="fas fa-bars"></i>&nbsp;&nbsp;</a>
+            Create Blog: Author: {{user.get_username}}
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <label for="public">Public?</label>
+            <input type="checkbox" id="public" name="public"  checked>
+            <input type="checkbox" id="public" name="public"  checked>
+
+        </div>
+        <div class="col-md-6">
+            <textarea title="Add Collaborators" name="editors" id="editors" style="width:100%; both;" cols="50" rows ="2" >Collaborators: {{user.get_username}}</textarea>
+        </div>
+
+    </div>
+
+</div>
+<div class="splitter" style="height: max-content;position:relative; overflow: auto; overflow-y: auto">
+<div id="menu" style="width:250px; height: 90vh;overflow-y: auto; overflow-x: hidden;">
+<div style="font-size: smaller; background: #dedede; padding: 4px;">
+Book <i class="fa fa-book" ></i> &nbsp;&nbsp;
+    <a href="#" onclick="getBookmarks()"   ><i class="fa fa-repeat" aria-hidden="true"></i></a>&nbsp;&nbsp;
+    <a href="#" onclick="menuExpandAll()"  ><i class="fa fa-angle-down" ></i></i>  </a>&nbsp;&nbsp;
+    <a href="#" onclick="menuCollapseAll()"><i class="fa fa-angle-up"   ></i></i>  </a>&nbsp;&nbsp;
+</div>
+<div id="tabs" class=tabs style=";border: 0px; border-left: 1px solid #f7f7f7">
+    <ul>
+        <li><a href="#tabs-TOC"  >TOC</a></li>
+        <li><a href="#tabs-menu" >Edit</a></li>
+    </ul>
+    <div id="tabs-TOC"  >TOC </div>
+    <div id="tabs-menu" >
+    <textarea id="bookmarks" style="width: 100%;min-height: 90%; font-size: small;font-family: Courier;" >
+#Chapter1               ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section1         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section2         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section3         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section1    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section2    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section3    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+
+#Chapter2               ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section1         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section2         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section3         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+
+#Chapter3               ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+#Chapter4               ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+
+#Chapter1               ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section1         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section2         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section3         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section1    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section2    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section3    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+
+#Chapter1               ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section1         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section2         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section3         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section1    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section2    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section3    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+
+#Chapter1               ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section1         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section2         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+    ## Section3         ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section1    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section2    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        ### Section3    ;;sada.narayanappa-2021-08-02__00-22-48.mdd
+        </textarea>
+    </div>
+</div>
+</div>
+
+<div id="separator1" class="separatorH" >.</div>
+<div id="first" style="">
+        {% csrf_token %}
+        <input id="file_id" type="file" name="file" onchange="handleFileSelect(this.files)" accept="csv/*" hidden>
+        <div id="file_drop" style="height: 100%; ">
+        <input name="author"    type="hidden" value="{{ user.username }}" >
+        <input name="index"     type="hidden" value="articles" >
+        <input name="file_name" id="file_name" size=50 style="width: fit-content" type="hidden" value="{{ user.username }}-{% now "Y-m-d__H-i-s" %}.mdd">
+        <input name="editing" id="editing" size=50 type="hidden" value="">
+        <textarea oninput="update()" name='content' id="editor" style="width:100%; height: 100%; resize: none;">{% include "samplemd.html" %}
+        </textarea>
+        </div>
+       <div style="position: fixed; bottom: 0; right: 0; z-index: 10;">
+        <button type="button" onclick="PrintElem('second')" class="btn btn-primary"><i class="far fa-file-pdf"></i> Print</button>
+           &nbsp;&nbsp;
+        <button type="submit" class="btn btn-primary" > Save <i class="fa fa-upload"></i></button>
+       </div>
+</div>
+<div id="separator2" class="separatorH" >.</div>
+<div id="second" >
+<div id="second-content" >
+Hello
+</div>
+</div>
+</div>
+</form>
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<script>
+function toggleDiv(di){
+    var d = $(di).css('display')
+    if (d =='none') {
+        $(di).css('display', "")
+    } else{
+        $(di).css('display', "none")
+    }
+}
+
+simplemde = new SimpleMDE({ element: document.getElementById("useless") });
+function update(val){
+    val = val || $('#editor').val()
+    if (window.editor_markdown)
+        val = window.editor_markdown.getValue()
+    html  = simplemde.markdown(val);
+    $('#second-content').html(html)
+    if (typeof  MathJax !== 'undefined' ) {
+          MathJax.Hub.Config({
+            tex2jax: {
+              inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+              processEscapes: true
+            }
+          });
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub, document.getElementById("second")]);
+    }
+     try {
+        var data = localStorage.setItem("blog_content", val);
+        var bata = localStorage.setItem("bookmarks",    val);
+    }
+    catch (e) {}
+    return html
+}
+
+function setupContentsCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt) ) {
+        return
+    }
+
+    g = JSON.parse(responseTxt)
+    if (g.total < 1){
+        alert("Document not found")
+        return
+    }
+    var d = g.hits[0]
+    var s = d._source
+    window.editor_markdown.setValue(s.content)
+    $('#editors').val(s.editors)
+    $('#file_name').val(s.file_name)
+    $('#index').val(s.index)
+    update()
+}
+function setDefaultoContent(){
+    try {
+        var data = localStorage.getItem("blog_content");
+        if (data && data.trim().length > 10) {
+            window.editor_markdown.setValue(data)
+            update(data)
+        } else{
+            update()
+        }
+    }
+    catch (e) {
+        update()
+    }
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function getfilecontentsCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    ret = JSON.parse(responseTxt);
+    update(ret.contents)
+}
+function getfilecontents(){
+    var f = $('#file_name').val()
+    const URL1  = `${window.location.origin}/api1/getmdfile/?q=${f}`
+    $.get(URL1, getfilecontentsCB )
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function setupContents(){
+    var urlp = new URL(window.location.href)
+    editid = urlp.searchParams.get('editid')
+
+    if (editid) {
+        $('#file_name').val(editid)
+        $('#editing')  .val(editid)
+        url =`${URL1}/essearchbyid&ids=${editid}`
+        MYGET( url, setupContentsCB)
+        return 1
+    }
+    // Otherwise
+    fname = urlp.searchParams.get('fname')
+    if (fname){
+        $('#file_name').val(fname)
+        getfilecontents()
+        return 1;
+    } else {
+        var fname = '{{ user.username }}-{% now "Y-m-d__H-i-s" %}.mdd'
+        //window.location = `${window.location}?fname=${fname}`
+        window.location = window.location.href.split('?')[0]+ `?fname=${fname}`
+        return 0
+    }
+    setDefaultoContent()
+    return 1;
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function PrintElem(elem) {
+    var mywindow = window.open('', 'PRINT', 'height=400,width=600');
+
+    mywindow.document.write('<html><head><title>' + document.title  + '</title>');
+    mywindow.document.write('</head><body >');
+    mywindow.document.write('<h1>' + document.title  + '</h1>');
+    mywindow.document.write(document.getElementById(elem).innerHTML);
+    mywindow.document.write('</body></html>');
+
+    mywindow.document.close(); // necessary for IE >= 10
+    mywindow.focus(); // necessary for IE >= 10*/
+
+    mywindow.print();
+    mywindow.close();
+
+    return false;
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function getBookmarksCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    getmenu(responseTxt, '#tabs-TOC', "Bookmarks")
+}
+function getBookmarks(){
+    //const URL1  = `${window.location.origin}/api1/capmenu/`
+    //setInterval (function (){$.get(URL1, getcapstoneprojectsCB)}, 1000 );
+    //$.get(URL1, getBookmarksCB)
+    var v =  $('#bookmarks').val();
+    getmenu(v, '#tabs-TOC', "", false)
+
+}
+getBookmarks()
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+var te_markdown = document.getElementById("editor");
+window.editor_markdown = CodeMirror.fromTextArea(te_markdown, {
+    mode: "markdown",
+    lineNumbers: true,
+    lineWrapping: true,
+    extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()); }},
+    foldGutter: true,
+    gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+    onChange: function (cm) {
+        console.log('sada')
+    }
+})
+window.editor_markdown.on("keyup", (function(cm, event) {
+    sw = parseInt($('#second').css('width'))
+    fw = parseInt($('#first' ).css('width'))
+    if (sw < .25 * fw){ // if preview is too small to see changes
+        console.log(fw, sw, 0.25 * fw)
+        return
+    }
+
+    if ( [8 , 13, 32].includes(event.keyCode) ) {
+        v = window.editor_markdown.getValue()
+        update(v)
+    }
+}));
+
+if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
+    textareas = document.getElementsByTagName('textarea');
+    for(var i = 0; i < textareas.length; i++){
+        textareas[i].style['padding-left'] = '13px';
+        textareas[i].style['padding-right'] = '13px';
+    }
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function validate(form) {
+    var ret = true;
+    form = document.getElementById("file_form");
+    if(form.elements['file'] && form.elements['file'].files.length != 1){
+        //alert("One file at a time");
+        //ret = false;
+    }
+    plain = update().trim()
+    if ( plain.length < 0){
+        alert("Not much text please enter some thing");
+        ret = false
+    }
+    return(ret);
+}
+$(document).ready(function() {
+    if (! setupContents() )
+        return
+    form = document.getElementById("file_form")
+    if (form){
+        //form.action =`${API_URL}/uploadfile/`
+        url =`${APIBASE}/uploadfile/`
+        form.action = url
+        $('#file_form').ajaxForm({
+            beforeSubmit: function() {
+                if (!validate($(this))){
+                    return false;
+                }
+                salert("<i class='fa fa-spinner fa-spin' style='font-size: 48px;color:red;'></i> Uploading files ...", "btn-info")
+            },
+            success: function(response) {
+                salert("Uploaded!! " + response, "btn-success", 2000)
+            },
+            error: function(response) {
+                res =  response
+                salert("Error!!!" + response.responseText, "btn-error")
+            },
+        });
+    }
+});
+</script>
+
+{% endblock %}

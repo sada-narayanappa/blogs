@@ -1,0 +1,190 @@
+{% extends "common.html" %}
+{% block content %}
+<link href="/static/geoui/slidermenu.css" rel="stylesheet" />
+<script src="/static/geoui/slidermenu.js"></script>
+
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML">
+</script>
+
+<style>
+@media print {
+    .printarea {
+        visibility: visible;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    #first {
+        display: none;
+    }
+
+    #editmenu {
+        display: none;
+    }
+
+    #bmmenu{
+        display: none;
+        height: 0px;
+    }
+
+    #second * {
+        visibility: visible;
+    }
+
+    #second {
+        width: 100%;
+        display: contents;
+        height: max-content;
+        text-align: -webkit-center !important;
+    }
+
+    #second-content {
+        max-width: 1024px;
+        margin: auto;
+        margin-top: .75in;
+        margin-bottom: 1.5in;
+    }
+    @page
+    {
+        size: auto;   /* auto is the initial value */
+
+        /* this affects the margin in the printer settings */
+        margin: 0.5in 0.5in 0.75in 0.5in;
+    }
+}
+</style>
+<div id="editmenu" style="width:100%;min-height:65px; padding-left: 15px; border-bottom: 1px solid #f0f0f0;">
+<div class="row">
+    <div class="col-md-9">
+        <a href=# onclick="toggleDiv('#bmmenu')"><i class="fas fa-bars"></i>&nbsp;&nbsp;</a>
+        <input type=text name="X_title" id="X_title" required="" class="form-control1"
+              placeholder="Enter the title here-REQUIRED"
+               style="text-align: left; width:40%;border-radius: 10px;"/>
+        <button title="Save - make sure filename is correct" onclick="saveMDcontentLocal()" class="btn btn-success" ><i class="fa fa-save"></i></button>
+        <button title="Share"  onclick="shareLink()" class="btn btn-success" ><i class="fa fa-share"></i></button>
+        <input type=text name="X_filename" id="X_filename"
+               style="border: 1px solid lightgrey; color: silver;width:40%;border-radius: 10px;" title="Name of the file to save" />
+        <input name="bmwidth" id="bmwidth" size=6  value="350" hidden />
+
+        <span id="status"></span>
+    </div>
+
+    <div id="file_drop" class="col-md-3" class="input-group" style="">
+    <form id="fileupload" method="post" enctype="multipart/form-data" style="display: contents">
+        {% csrf_token %}
+        <input class="form-control" style="width: 70%; height: 50px; display: inline;" id="file_id"
+                title="The file will save in imgs and you may refer to it using /static/articles/imgs/xxx"
+               name=file type="file" onchange="handleFileSelect(this.id)" accept="*">
+        <button type="button"  onclick="handleUploadClick1('/blogs/upload')"
+                title="The file will save in imgs and you may refer to it using /static/articles/imgs/xxx"
+                class="btn btn-success"><i class="fa fa-upload"></i></button>
+    </form>
+    </div>
+      </div>
+    </div>
+</div>
+
+</div>
+<div class="splitter" style="height: 90vh;position:relative;">
+    <div id="bmmenu" style="width: 30vw; height: 90vh; ">
+    <div id="myfilesMenu" class="scroller" style="height: 40vh;overflow-y: auto;"></div>
+</div>
+<div id="myfilesMenu" class="scroller" style="height: 40vh;overflow-y: auto;"></div>
+<div id="separator1" class="separatorH" >.</div>
+    {% include "secured/edit_article_mod1.html" %}
+</div>
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<script>
+function handleUploadClick1(url='/blogs/upload') {
+    handleUploadClick('/blogs/upload/')
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function getMyArticlesCB(responseTxt, statusTxt, xhr){
+    if (!responseTxt || JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    var list = JSON.parse(responseTxt);
+    var mfiles = "";
+    for (var i=0; i < list.values.length; i++){
+        var it = list.values[i]
+        mfiles += `# ${it[1]} ;;; ${it[0]} \n`;
+    }
+    out = getmenu(mfiles, '#myfilesMenu', "", false)
+}
+function getMyArticles(){
+    const URL1  = `/blogs/getarticles/?user={{ user.username }}`
+    $.get(URL1, getMyArticlesCB )
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+document.addEventListener("keydown", function(e) {
+    if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)  && e.keyCode == 83) {
+        e.preventDefault();
+        // Process the event here (such as click on submit button)
+        saveMDcontentLocal()
+    }
+}, false);
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function saveMDcontentLocalCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    var file = $('#X_filename').val()
+
+    var share = window.location.href.split('?')[0]+ `?file=${file}`
+    salert("Saved Filename: " + share)
+    getMyArticles();
+    shareLink()
+}
+function saveMDcontentLocal(){
+    var titl = $('#X_title').val()
+    if ( !titl.trim()) {
+        salert("Please enter a title", "btn-danger")
+        $('#X_title').focus()
+        return
+    }
+    var ed = {
+        title: titl
+    }
+    var file = saveMDcontents($('#X_filename').val(), saveMDcontentLocalCB, ed)
+}
+function shareLink(){
+    var file = $('#X_filename').val().trim()
+    if (!file || !file.length){
+        salert("Choose filename", "btn-danger");
+        $('#X_filename').focus()
+        return;
+    }
+    var share= `${window.location.origin.split('?')[0]}/blogs/view_article1.html/?viewid=${file}`
+    window.open(share, "SHARED")
+    copyText(null, share)
+    salert("Saved Filename: link copied to your clipboard: " + share)
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function myMenuItemClicked(d){
+    console.log("In myMenuItemClicked: create_article.html", d);
+    $('#X_filename').val(d)
+    setupContents(d);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$(document).ready(function() {
+    var f1 = document.getElementById("bmmenu");
+    var f2 = document.getElementById("articles");
+    var sp = document.getElementById("separator1");
+    dragElement(sp, "H", f1, f2);
+
+    // Side Menu Init
+    menuItemClicked = myMenuItemClicked
+    getMyArticles();
+    $('#bmmenu').width($('#bmwidth').val())
+    toggleDiv('#bmmenu') // Lets hide the menu
+
+    // Default Content for Editor from last saved.
+    file = setupContents()
+    $('#X_filename').val(file)
+    $('#myfilesMenu').css('height', '97%');
+});
+</script>
+{% endblock %}

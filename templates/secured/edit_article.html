@@ -1,0 +1,60 @@
+{% extends "common.html" %}
+{% block content %}
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML">
+</script>
+<div class="fcontainer">
+    <div class="header" style="border-bottom: 1px solid #ccc;">
+    <form id="fileupload" method="post" enctype="multipart/form-data" style="display: contents">
+        {% csrf_token %}
+        <div class="row">
+        <div class="col-md-9">
+            <input type=text name="X_title" id="X_title" required placeholder="Enter title" style="width:45%;"/>
+            <input type=text name="X_filename" id="X_filename" size=20 required disabled title="Name of the file to save" />
+            <input type=text name="X_dir" size="20" id="X_dir" disabled />
+            <button type=button onclick="saveMDcontents()" class="btn btn-success" ><i class="fa fa-save"></i></button>
+            <button type=button onclick="shareLink()" class="btn btn-success" ><i class="fa fa-share"></i></button>
+        </div>
+        <div id="file_drop" class="col-md-3" class="input-group" >
+                <input class="form-control" style="width: 80%; height: 40px; display: inline;" id="file_id"
+                        title="The file will save in imgs and you may refer to it using /static/articles/imgs/xxx"
+                    name=file type="file" onchange="handleFileSelect(this.id)" accept="*">
+                <button type="button"  onclick="handleUploadClick1('/blogs/upload')"
+                        title="The file will save in imgs and you may refer to it using /static/articles/imgs/xxx"
+                        class="btn btn-success"><i class="fa fa-upload"></i></button>
+            </div>
+        </div>
+    </form>
+    </div>
+    <div class="content" style="background-color: bisque;">
+        {% include "secured/edit_article_mod1.html" %}
+    </div>
+</div>
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<script>
+function handleUploadClick1(url='/blogs/upload') {
+    handleUploadClick('/blogs/upload/')
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function saveMDcontentLocal(){
+    var file = saveMDcontents()
+}
+function shareLink(){
+    var file = $('#X_filename').val().trim()
+    if (!file || !file.length){
+        salert("Choose filename", "btn-danger");
+        $('#X_filename').focus()
+        return;
+    }
+    var share= `${window.location.origin.split('?')[0]}/blogs/blogs/view_article.html/?viewid=${file}`
+    window.open(share, "SHARED")
+    copyText(null, share)
+    salert("Saved Filename: link copied to your clipboard: " + share)
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$(document).ready(function() {
+    file = setupContents()
+});
+</script>
+{% endblock %}

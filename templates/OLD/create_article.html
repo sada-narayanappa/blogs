@@ -1,0 +1,192 @@
+{% extends "common.html" %}
+{% block content %}
+
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML">
+</script>
+
+<style>
+@media print {
+    .printarea {
+        visibility: visible;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    #first {
+        display: none;
+    }
+
+    #editmenu {
+        display: none;
+    }
+
+    #bmmenu{
+        display: none;
+        height: 0px;
+    }
+
+    #second * {
+        visibility: visible;
+    }
+
+    #second {
+        width: 100%;
+        display: contents;
+        height: max-content;
+        text-align: -webkit-center !important;
+    }
+
+    #second-content {
+        max-width: 1024px;
+        margin: auto;
+        margin-top: .75in;
+        margin-bottom: 1.5in;
+    }
+    @page
+    {
+        size: auto;   /* auto is the initial value */
+
+        /* this affects the margin in the printer settings */
+        margin: 0.5in 0.5in 0.75in 0.5in;
+    }
+}
+</style>
+<div id="editmenu" style="width:100%;min-height:65px; background: white;padding-left: 15px;vertical-align: middle; border-bottom: 1px solid #f0f0f0;">
+    <div class="row">
+        <div class="col-md-7">
+            Create Blog: Author: {{user.get_username}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <div class="custom-control custom-switch" style="width:120px;display: inline-block; ">
+                    <!-- label class="custom-control-label" for="public" style="vertical-align: baseline">Public?</label>
+                    <input type="checkbox" class="custom-control-input" name="public" id="public" checked -->
+                    <input type="checkbox" id="public" name="public" checked> Public?
+                </div>
+            Template:
+            <select name=templateSelect" id="templateSelect" onchange="getTemplate(this)">
+                <option value=""             >  Choose           </option>
+                <option value="resume.md"    >  Resume           </option>
+                <option value="report.md"    >  Technical Report </option>
+                <option value="bookfm.md"    >  Book Front matter</option>
+                <option value="chapter.md"   >  Book Chapter     </option>
+                <option value="howtodoc.md"  >  How to Knowledge </option>
+            </select>
+
+            <br/>
+            <a href=# onclick="toggleDiv('#bmmenu')"><i class="fas fa-bars"></i>&nbsp;&nbsp;</a>
+
+            File Name: (*) <input title="" autofocus="autofocus" type=text name="X_fname" id="X_fname" size="40"
+                                  vvalue="{% now "ymd-H_i" %}" required="" />
+
+            <button title="Save - make sure filename is correct" onclick="saveMDcontentLocal()" class="btn btn-success" ><i class="fa fa-save"></i></button>
+            <button title="Share"  onclick="shareLink()" class="btn btn-success" ><i class="fa fa-share"></i></button>
+            <button title="download"  onclick="" class="btn btn-success" ><i class="fa fa-download"></i></button>
+            <button title="Print or Save as PDF"  type="button" onclick="print()" class="btn btn-danger"><i class="fa fa-print"></i></button>
+
+
+        </div>
+        <div class="col-md-5">
+            <textarea name="collaborators" id="collaborators" style="width:100%; both;" cols="50" rows ="2">Collaborators: N/A </textarea>
+        </div>
+    </div>
+
+</div>
+<div class="splitter" style="height: 90vh;position:relative; overflow: auto1;">
+    {% include "secured/edit_bookmarks.html" %}
+<div id="separator1" class="separatorH" >.</div>
+    {% include "secured/edit_article_mod.html" %}
+</div>
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<script>
+document.addEventListener("keydown", function(e) {
+    if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)  && e.keyCode == 83) {
+        e.preventDefault();
+        // Process the event here (such as click on submit button)
+        saveMDcontentLocal()
+        shareLink()
+    }
+}, false);
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function saveMDcontentLocalCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    var file = $('#X_fname').val()
+
+    var share = window.location.href.split('?')[0]+ `?file=${file}`
+    salert("Saved Filename: " + share)
+    getMyArticles();
+}
+function saveMDcontentLocal(){
+    var ed = {
+        public: document.getElementById('public').checked,
+        collaborators: $('#collaborators').val()
+    }
+    var file = saveMDcontents ($('#X_fname').val(), saveMDcontentLocalCB, ed)
+}
+function shareLink(){
+    var file = $('#X_fname').val().trim()
+    if (!file || !file.length){
+        salert("Choose filename", "btn-danger");
+        $('#X_fname').focus()
+        return;
+    }
+
+    file = getFullFilePath(file)
+    /*
+    var share = window.location.href.split('?')[0]
+    if (share.endsWith('#'))
+        share = share.slice(0,share.length-1).trim();
+    share = share + `?file=${file}`
+    copyText(null, share)
+    salert("Saved Filename: link copied to your clipboard: " + share)
+    window.location.href = share
+    */
+    var share= `${window.location.origin.split('?')[0]}/blogs/view_article.html/?viewid=${file}`
+    window.open(share, "SHARED")
+    copyText(null, share)
+    salert("Saved Filename: link copied to your clipboard: " + share)
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function getTemplateCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    $('#X_fname').val( document.getElementById("templateSelect").value)
+    update(responseTxt)
+}
+function getTemplate(obj){
+    if ( !obj.value)
+        return;
+    v = "/uploaded/templates/"+obj.value;
+    const URL1  = `/api1/getfile/?file=${v}`
+    console.log(v)
+    $.get(URL1, getTemplateCB )
+}
+function myMenuItemClicked(d){
+    console.log("In myMenuItemClicked: create_article.html", d);
+    $('#X_fname').val(d)
+    setupContents(d);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$(document).ready(function() {
+    var f1 = document.getElementById("bmmenu");
+    var f2 = document.getElementById("articles");
+    var sp = document.getElementById("separator1");
+    dragElement(sp, "H", f1, f2);
+
+    //restoreZZValues()
+
+    // Side Menu Init
+    menuItemClicked = myMenuItemClicked
+    getMyArticles();
+    $('#bmmenu').width($('#bmwidth').val())
+
+    // Default Content for Editor from last saved.
+    file = setupContents()
+    $('#X_fname').val(file)
+});
+</script>
+{% endblock %}

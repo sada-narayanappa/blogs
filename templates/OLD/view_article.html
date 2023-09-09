@@ -1,0 +1,94 @@
+{% extends "common.html" %}
+{% block content %}
+{% load custom_tags %}
+<script type="text/javascript" src="/static/bower_components/simplemde/debug/simplemde.js"></script>
+<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"> </script>
+<style>
+#second {
+    width: 100%;
+    display: contents;
+    height: max-content;
+    text-align: -webkit-center !important;
+}
+
+#viewcontent {
+    max-width: 1024px;
+    margin: auto;
+    margin-top: .75in;
+    margin-bottom: 1.5in;
+    text-align: left;
+}
+</style>
+<div id="second" style="height: 100vh; overflow: auto;"  >
+    <div id="viewcontent"></div>
+</div>
+<input name="viewid"  id="viewid"   hidden value="" >
+<input name="type"    id="type"     hidden value="" >
+<input name="edit"    id="edit"     hidden value="" >
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    SCRIPTS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<script>
+simplemde = new SimpleMDE({element: null });
+function md2html(val, ext, div){
+    var html  = simplemde.markdown(val);
+    if ( div ) {
+        $(div).html(ext + html)
+        geoui_setupMATHJAX(div.substring(1))
+    }
+    return html
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function viewCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    val = responseTxt;
+    if (responseTxt.trim().startsWith("{")) {
+        ret = JSON.parse(responseTxt);
+        val = ret[0]
+    }
+    md2html(val, $('#edit').val(), '#viewcontent' )
+    setTimeout(geoui_scrollTo, 50);
+}
+function view(viewid, type="md|text|elastic|capstone"){
+    type = type.substr(0,2) || "md";
+
+    if ( type === "md") {
+        var file = viewid
+        if ( !file.endsWith(".md"))
+            file = file + ".md"
+        if ( file.startsWith("/opt") || file.startsWith("/uploaded/"))
+            ; // Dont worry about it - it is absolute path
+        else if ( file.indexOf("/") < 0 || file.indexOf("{{ user.username }}/") >= 0 )
+            file = "/uploaded/" + file
+        else
+            file = "/uploaded/{{ user.username }}/" + file
+
+        var href = "/blogs/secured/create_article.html/?file="+ file;
+        //if ({{ request.user| has_group:"editcapstone"}}) {
+        //    var e= `<a style="float:right;color: #fff" class="btn btn-secondary" target="cap" href="${href}"><i class="fas fa-edit"></i></a>`
+        //    $('#edit').val(e)
+        //}
+        if ({{ request | can_edit:"viewid" }}) {
+            var e= `<a style="float:right;color: #fff" class="btn btn-secondary" target="cap" href="${href}"><i class="fas fa-edit"></i></a>`
+            $('#edit').val(e)
+        }
+        const URL1  = `/api1/getfile/?file=${file}`
+        $.get(URL1, viewCB )
+    }
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+$(document).ready(function() {
+    var urlp   = new URL(window.location.href)
+    var viewid =  urlp.searchParams.get('viewid')  || ""
+    var type   =  urlp.searchParams.get('type')    || "md"
+
+    $('#viewid').val(viewid)
+    $('#type')  .val(type)
+
+    if (viewid)
+        view(viewid, type)
+})
+</script>
+{% endblock %}

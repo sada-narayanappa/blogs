@@ -1,0 +1,191 @@
+<link href="/static/geoui/jquery-tabs.css" rel="stylesheet" />
+<link href="/static/geoui/slidermenu.css" rel="stylesheet" />
+<script src="/static/geoui/slidermenu.js"></script>
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    SCRIPTS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -->
+<script>
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ==> Write your own code unless you specified customer action
+function myMenuItemClicked(a) {
+    console.log("Waht should I do!!!", a)
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function resized() {
+    $('#bmwidth').val($('#bmmenu').width());
+    saveZZValues('bmwidth')
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function getBMfilecontentsCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    $("#contents").val(responseTxt);
+    getmenu($('#contents').val(), '#books', "", false)
+}
+function getBMfilecontents(f){
+    const URL1  = `/api1/getfile/?file=${f}`
+    $.get(URL1, getBMfilecontentsCB )
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function getMyArticlesCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    //salert(responseTxt);
+    var list = JSON.parse(responseTxt);
+    var mfiles = "";
+    for (var i=0; i < list.length; i++){
+        mfiles += `# ${list[i]} ;;; ${list[i]} \n`;
+    }
+    out = getmenu(mfiles, '#myfilesMenu', "", false)
+}
+function getMyArticles(){
+    const URL1  = `${window.location.origin}/api1/myarticles/?user={{ user.username }}`
+    $.get(URL1, getMyArticlesCB )
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function saveBM(e) {
+    if (!( e.keyCode == 32 || e.keyCode <= 13 ))
+        return
+    localStorage.setItem("bookmarks", $("#contents").val());
+    //salert("saved locally")
+}
+function saveBMFileCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    salert("saved Bookmarks ")
+    InitBookMarkContents()
+}
+const BM_LOCATION = "uploaded/{{ user.username }}/books/"
+function saveBMFile(f) {
+    f = f || $('#X_bmfile1').val()
+    if ( !f)
+        return
+    saveBM(0);
+    const URL1  = `${window.location.origin}/api1/putfile/`
+    data = { contents: $("#contents").val(), cfilename: BM_LOCATION + $('#X_bmfile1').val() }
+
+    data1 = API_POSTDATA(data)
+    $.post(URL1, data1, saveBMFileCB )
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function InitBookMarkContents1( bookMarkFile ) {
+    if ( !bookMarkFile )
+        return
+    $('#X_bmfile').val(bookMarkFile)
+    InitBookMarkContents(bookMarkFile)
+}
+function InitBookMarkContents( bookMarkFile ) {
+    if ( !bookMarkFile) {
+        var urlp = new URL(window.location.href)
+        bookMarkFile = urlp.searchParams.get('bookmark')
+    }
+    if (bookMarkFile) {
+        $('#X_bmfile1').val(bookMarkFile)
+        if (!bookMarkFile.startsWith("/") || !bookMarkFile.startsWith("uploaded")){
+            bookMarkFile = BM_LOCATION + bookMarkFile;
+        }
+        getBMfilecontents(bookMarkFile);
+        return
+    }
+    var bata = '' // localStorage.getItem("bookmarks");
+    if (!bata) {
+        var src = "/uploaded/templates/book_ai.md";
+        var file= $('#X_bmfile1').val() || "book_default.md";
+        var dst = BM_LOCATION + file;
+        $('#X_bmfile').val(file)
+        var URL1  = `${window.location.origin}/api1/copyfile/?src=${src}&dst=${dst}`
+        $.get(URL1, getBMfilecontentsCB )
+        return;
+    }
+    $("#contents").val(bata);
+    getmenu($('#contents').val(), '#books', "", false)
+}
+function document_ready() {
+    restoreZZValues()
+    $('#bmmenu').width($('#bmwidth').val())
+    menuItemClicked = myMenuItemClicked
+    InitBookMarkContents()
+}
+</script>
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    HTML
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -->
+<div id="bmmenu" onmouseleave="resized()" style="width: 30vw; height: 90vh; ">
+<div
+    style="background: #f9f9f9; font-variant-caps: small-caps; text-align: center;font-size:small; height: 30px;
+        border-bottom: 1px solid silver; border-top: 1px solid silver; width: 100%;
+        display: table;vertical-align: middle !important;">
+        <div1 style="width:100%; display: table-cell;vertical-align: middle !important;">My Articles</div1>
+</div>
+<div id="myfilesMenu" class="scroller" style="height: 40vh;overflow-y: auto;"></div>
+
+<div class="separatorV" ></div>
+<div id="bookmenudiv" style="display:none;" >
+<div style="background: #f9f9f9; font-variant-caps: small-caps; text-align: center;font-size:small; height: 30px;
+        border-bottom: 1px solid silver; border-top: 1px solid silver; width: 100%;
+        display: table;vertical-align: middle !important;">
+        <div1 style="width:100%; display: table-cell;vertical-align: middle !important;">My Book</div1>
+</div>
+<div style="font-size: smaller; background: #dedede; padding: 4px; ">
+    Select Book or Create a New one<i class="fa fa-book" ></i> &nbsp;&nbsp;
+    <select id="X_bmfile1" class="form-control border-right-0 inputhw"
+                onchange="InitBookMarkContents1($('#X_bmfile1').val());">
+            <option value="">-- Select Book--</option>
+    </select>
+    <input name="X_bmfile"  id="X_bmfile"  style="width: 99%; border-radius: 5px;" size=120 value="" />
+
+    <a href="#" onclick="InitBookMarkContents($('#X_bmfile').val())"          ><i class="fa fa-repeat"></i></a>&nbsp;&nbsp;
+    <a href="#" onclick="saveBMFile()"     ><i class="fa fa-save"       ></i></a>&nbsp;&nbsp;
+    <a href="#" onclick="menuExpandAll()"  ><i class="fa fa-angle-down" ></i>  </a>&nbsp;&nbsp;
+    <a href="#" onclick="menuCollapseAll()"><i class="fa fa-angle-up"   ></i>  </a>&nbsp;&nbsp;
+    <input name="bmwidth" id="bmwidth" size=6  value="350" hidden />
+</div>
+    <div id="tabs" class=tabs style=";border: 0px; border-left: 1px solid #f7f7f7">
+        <ul>
+            <li><a href="#tabs-TOC"  >TOC</a></li>
+            <li><a href="#tabs-menu" >Edit</a></li>
+        </ul>
+        <div id="tabs-TOC"  >
+            <div id="books"  class="scroller"  style="overflow-y: auto; height: 40vh; "></div>
+        </div>
+        <div id="tabs-menu" >
+        <textarea id="contents" onkeyup="saveBM(event)"  style="width: 100%;min-height: 90%; font-size: small;font-family: Courier;" ></textarea>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function getBookMarkFileNamesCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true)) {
+        return;
+    }
+    var files = JSON.parse(responseTxt);
+
+    $('#X_bmfile1').empty()
+    var ds = files
+    var opts = `<option value=''}> -- select Book -- </option>\n`;
+    for (i=0; i < files.length; i++){
+        var name = files[i].substring( BM_LOCATION.length );
+        opts += `<option value=${name}> ${name}</option>\n`
+    }
+    $('#X_bmfile1').append(opts);
+    if ( files.length >= 1) {
+        $('#X_bmfile1')[0].selectedIndex = 1
+        $('#X_bmfile1').change()
+    }
+}
+function getBookMarkFileNames(dir){
+    dir  = dir || BM_LOCATION
+    var patt = "*.md"
+    var url  = `/api1/getfiles/?user={{ user.username }}&dir=${dir}&pattern=${patt}`
+    $.get(url, getBookMarkFileNamesCB )
+}
+$(document).ready(function() {
+    getBookMarkFileNames()
+})
+</script>

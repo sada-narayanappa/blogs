@@ -1,0 +1,261 @@
+<script src="/static/bower_components/simplemde/debug/simplemde.js"></script>
+<link rel="stylesheet" href="/static/bower_components/codemirror/lib/codemirror.css">
+<link  href="/static/geoui/splitter1.css" rel="stylesheet" />
+<script src="/static/geoui/splitter1.js"></script>
+
+<script src="/static/bower_components/codemirror/lib/codemirror.js"></script>
+  <script src="/static/bower_components/codemirror/lib/codemirror.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/foldcode.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/foldgutter.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/brace-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/xml-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/indent-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/markdown-fold.js"></script>
+  <script src="/static/bower_components/codemirror/addon/fold/comment-fold.js"></script>
+  <script src="/static/bower_components/codemirror/mode/javascript/javascript.js"></script>
+  <script src="/static/bower_components/codemirror/mode/xml/xml.js"></script>
+  <script src="/static/bower_components/codemirror/mode/css/css.js"></script>
+  <script src="/static/bower_components/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+  <script src="/static/bower_components/codemirror/mode/python/python.js"></script>
+  <script src="/static/bower_components/codemirror/mode/markdown/markdown.js"></script>
+<style>
+.CodeMirror, .CodeMirror-scroll {
+        height: 100%;
+}
+#first {
+    width: 50%;
+    height: max-content;
+    min-width: 10px;
+    border-radius: 4px 4px 0 0 ;
+    border: 1px solid rgba(50, 50, 93, 0.1);
+}
+
+#second {
+    background-color: white;
+    border-radius: 4px 4px 0 0 ;
+    border: 1px solid rgba(50, 50, 93, 0.1);
+    width: 50%;
+    height: fit-content;
+    overflow: auto;
+    padding-top: 30px;
+
+    text-align: -webkit-center;
+}
+
+#second-content {
+    text-align: initial;
+    max-width: 850px;
+}
+</style>
+
+
+<div id="form_data" style="position: fixed; bottom: 0; right: 0; z-index: 10; display:none">
+<input name="index"     type="hidden" value="articles" >
+<input name="elastic"   id="elastic"   size=50 style="width: fit-content" type="hidden" value="">
+<input name="X_file_name" id="X_file_name" size=50 hidden value="">
+<button type="button" onclick="PrintElem('second')" class="btn btn-outline-primary">
+    <i class="far fa-file-pdf"></i> Print</button>&nbsp;&nbsp;
+<button onclick="saveMDcontents($('#X_file_name').val())" class="btn btn-outline-primary" > Save <i class="fa fa-upload"></i></button>
+</div>
+
+<div id="articles" class="splitter" style=";position:relative; overflow: auto; overflow-y: auto">
+    <div id="first" style="height: 100%;overflow: auto;">
+            <textarea name='content' id="editor"
+                      style="width:100%; height: 100%; resize: none;">{% include "samplemd.html" %}
+            </textarea>
+    </div>
+    <div id="separator2" class="separatorH" >.</div>
+    <div id="second" style="height: 100%; overflow: auto;"  >
+        <div id="second-content">
+        Hello
+        </div>
+    </div>
+</div>
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<script>
+simplemde = new SimpleMDE({ element: document.getElementById("useless") });
+function update(val){
+    if (val)
+        window.editor_markdown.setValue(val)
+    val = val || window.editor_markdown.getValue()
+    var html  = simplemde.markdown(val);
+    $('#second-content').html(html)
+
+    geoui_setupMATHJAX('vdoc')
+
+    var data = localStorage.setItem("blog_content", val);
+    return html
+}
+
+function update1CB(responseTxt, statusTxt, xhr) {
+    if (JS_error(responseTxt, statusTxt, xhr, true)) {
+        return;
+    }
+    var html = responseTxt
+    $('#second-content').html(html)
+    geoui_setupMATHJAX('second')
+}
+
+function update1(val){
+    if (val)
+        window.editor_markdown.setValue(val)
+    val = val || window.editor_markdown.getValue()
+    MYPOST(`${URL1}/markdown`, {text: val}, update1CB);
+    localStorage.setItem("blog_content", val);
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function saveMDcontentsCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    salert("Saved Filename: " + $('#X_file_name').val(), 1000)
+}
+
+function saveMDcontents(file, cb, dataExt={}){
+
+    file = getFullFilePath(file)
+
+    var val = window.editor_markdown.getValue()
+    //val  = val.replace(/<.*?ZZZLASTEDIT.*?\/>/g, '')
+    val  = val.replace(/‣/g, '')
+
+    var vcu = window.editor_markdown.getCursor()
+    var nId = geoui_nthIndex(val, '\n', vcu.line )
+
+    if ( nId > 0){
+        //val = val.slice(0, nId+1) + `‣<div id=ZZZLASTEDIT ${vcu.line} />` + val.slice(nId+1)
+        val = val.slice(0, nId) + `‣\n` + val.slice(nId+1)
+    }
+
+    data = { contents: val, cfilename: file }
+    $.extend(data, dataExt )
+    var data1 = API_POSTDATA(data)
+    $.post('/api1/putfile/', data1, cb || saveMDcontentsCB )
+}
+
+function getFullFilePath(file) {
+    if (file) {
+        file = file.trim();
+    }
+    if (!file){
+        salert("Alert filename required!", "btn-danger")
+        return;
+    }
+    if ( !file.endsWith(".md"))
+        file = file + ".md"
+
+    if ( !file.indexOf("/") < 0 )
+        file = "/uploaded/{{ user.username }}/" + file
+    else if ( !file.indexOf("uploaded/") < 0  )
+        file = "/uploaded/" + file
+
+    return file;
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function getMDfilecontentsCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt, xhr, true) ) {
+        return;
+    }
+    var cont = responseTxt || "Create Your content Here"
+    update(cont)
+}
+function getMDfilecontents(file){
+    if ( !file.endsWith(".md"))
+        file = file + ".md"
+
+    if ( file.indexOf("/") < 0 )
+        file = "/uploaded/{{ user.username }}/" + file
+    else if ( !file.startsWith("/uploaded/"))
+        file = "/uploaded/" + file
+
+
+    const URL1  = `/api1/getfile/?file=${file}`
+    $.get(URL1, getMDfilecontentsCB )
+
+    return file
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function getElasticSearchCB(responseTxt, statusTxt, xhr){
+    if (JS_error(responseTxt, statusTxt) ) {
+        return
+    }
+    g = JSON.parse(responseTxt)
+    if (g.total < 1){
+        salert("Document not found!!" )
+        return
+    }
+    var d = g.hits[0]
+    var s = d._source
+    window.editor_markdown.setValue(s.content)
+    $('#editors').val(s.editors)
+    $('#X_file_name').val(s.file_name)
+    $('#index').val(s.index)
+    update()
+}
+function getElasticSearch(esid){
+    $('#X_file_name').val(esid)
+    url =`${URL1}/essearchbyid&ids=${esid}`
+    MYGET( url, getElasticSearchCB)
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function setupContents(file){
+    var urlp = new URL(window.location.href)
+    file = file || urlp.searchParams.get('file')
+
+    if (file){
+        $('#X_file_name').val(file)
+        getMDfilecontents(file)
+    } else {
+        var data = localStorage.getItem("blog_content");
+        if (data && data.trim().length > 10) {
+            update(data)
+        }
+    }
+    return file;
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+var te_markdown = document.getElementById("editor");
+window.editor_markdown = CodeMirror.fromTextArea(te_markdown, {
+    mode: "markdown",
+    lineNumbers: true,
+    lineWrapping: true,
+    extraKeys: {"Ctrl-Q": function(cm){ cm.foldCode(cm.getCursor()); }},
+    foldGutter: true,
+    gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+    onChange: function (cm) {
+        console.log('sada')
+    }
+})
+window.editor_markdown.on("keyup", (function(cm, event) {
+    sw = parseInt($('#second').css('width'))
+    fw = parseInt($('#first' ).css('width'))
+    if ( (event.key === "s" || event.key === "S") && (event.metaKey) ){
+        update()
+    }
+
+    if (sw < .25 * fw){ // if preview is too small to see changes
+        console.log(fw, sw, 0.25 * fw)
+        return
+    }
+
+
+    if ( event.keyCode <= 13 || [ 32].includes(event.keyCode) ) {
+        update()
+    }
+}));
+
+if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
+    textareas = document.getElementsByTagName('textarea');
+    for(var i = 0; i < textareas.length; i++){
+        textareas[i].style['padding-left'] = '13px';
+        textareas[i].style['padding-right'] = '13px';
+    }
+}
+function document_ready() {
+    //setupContents()
+}
+
+$(document).ready(function() {
+    $('#myfilesMenu').css('height', '97%');
+})
+</script>
