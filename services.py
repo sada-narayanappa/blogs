@@ -5,7 +5,6 @@
 from django.conf import settings
 import os, json, sys, datetime, geoapp, logging
 from  mangorest.mango import webapi
-#import aiservices
 
 BASE = "/opt/data/data/articles/raw/"
 logger = logging.getLogger( "app.blogs")
@@ -45,6 +44,7 @@ def savearticle(request, user="noname", cfilename="", title="", contents="", **k
     file = find(cfilename)
     if (not file):
         #file = f"{user}-{datetime.datetime.utcnow().replace(microsecond=0).isoformat()}.md"
+        logger.info(f"\n\n\n===>****** Saving to: {FILES_DIRS[0]} \n\n\n******")
         if (os.path.exists(FILES_DIRS[0])):   # First preference to blogs directory link if it exits
             file = FILES_DIRS[0] + cfilename
         else:
@@ -74,7 +74,7 @@ def savearticle(request, user="noname", cfilename="", title="", contents="", **k
     with open(meta, "w") as f:
         f.write(json.dumps(kwargs, indent = 4) )
 
-    with open(cfilename, "wb") as f:
+    with open(file, "wb") as f:
         f.write(contents.encode('utf-8'))
 
     #os.system(f'/opt/utils/filestoes.py -d {FILES_DIRS[0]} -t "*.md" &')
