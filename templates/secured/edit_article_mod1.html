@@ -165,8 +165,9 @@ function setupContentsCB(responseTxt, statusTxt, xhr, ctx, formdata){
     }
     console.log(responseTxt.slice(0,64))
     if (!responseTxt.trim().startsWith("{")) {
-        salert(responseTxt)
-        update(responseTxt)
+        salert(responseTxt, "btn-danger", "")
+        $('#X_filename').val(ctx.file)
+        update(responseTxt + "\n\nCREATE ONE!!")
         return
     }
 
