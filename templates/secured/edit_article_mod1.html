@@ -102,7 +102,7 @@ function saveMDcontents( ){
         val = val.slice(0, nId) + `‣\n` + val.slice(nId+1)
     }
 
-    console.log("SaveMDcontents", data)
+    //console.log("SaveMDcontents", data)
     data = { contents: val, cfilename: file , title: tit, savein: dir}
     callws('/blogs/savearticle/', "fileupload", saveMDcontentsCB, data )
 }
