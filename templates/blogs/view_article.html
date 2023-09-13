@@ -46,6 +46,8 @@ function md2html(val, ext, div){
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 function edit(viewid){
+    console.log('EDIT ----> {{ user.is_superuser }}')
+
     var v = $('#viewid').val()
     var edit= `${window.location.origin.split('?')[0]}/blogs/secured/edit_article.html/?viewid=${v}`
     window.open(edit, "EDIT")
@@ -68,6 +70,7 @@ function viewCB(responseTxt, statusTxt, xhr, ctx, form){
     saveZZValues()
     //setTimeout(geoui_scrollTo, 50);
 
+    //console.log('SUPER ----> {{ user.is_superuser }}')
     var is_super = "{{ user.is_superuser }}" == "True" ? 1 : 0
     var author   = (ret.meta) ? ret.meta.user : ""
     var user     = "{{ user.username }}"
