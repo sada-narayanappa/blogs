@@ -191,6 +191,7 @@ function setupContents(file){
         var dttm = (new Date()).toISOString()
         dttm = dttm.substring(0,19) + "Z"
         var file = `{{user.username}}-${dttm}.md`
+        var file = `{{user.username}}.md`
         $('#X_filename').val(file)
         $('#X_filename').prop('disabled', 0)
         update()
