@@ -122,6 +122,7 @@ input:invalid {        border: 2px solid red;    }
             <br/>
             <input type="text"  id="stext" onkeypress="handle(event)"  placeholder="what is your search" value="" 
                 style="width: 80%; border-radius: 0.25rem;height: 50px; border-radius: 25px; padding: 10px;">
+            <a onclick="handle()" href="#" style="margin: -48px">&#128269;</a>
         </div>
 <br/>
 <br/>
@@ -166,6 +167,7 @@ function viewdocHide(e) {
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function handle(e){
+    if(!e ) search()
     if(e && e.keyCode === 13){
         e.preventDefault(); // Ensure it is only this code that runs
         search()
