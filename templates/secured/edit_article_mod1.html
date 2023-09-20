@@ -84,6 +84,8 @@ function saveMDcontentsCB(responseTxt, statusTxt, xhr, context, formdata){
         return;
     }
     salert(responseTxt)
+    if ( SHARE_LINK_CLICKED )
+        shareLink()
 }
 
 function saveMDcontents( ){

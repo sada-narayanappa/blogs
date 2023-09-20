@@ -43,6 +43,7 @@ function handleUploadClick1(url='/blogs/upload') {
 function saveMDcontentLocal(){
     var file = saveMDcontents()
 }
+var SHARE_LINK_CLICKED = 0
 function shareLink(){
     var file = $('#X_filename').val().trim()
     if (!file || !file.length){
@@ -54,6 +55,7 @@ function shareLink(){
     window.open(share, "SHARED")
     copyText(null, share)
     salert("Saved Filename: link copied to your clipboard: " + share)
+    SHARE_LINK_CLICKED = 1
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $(document).ready(function() {

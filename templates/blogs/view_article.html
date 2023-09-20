@@ -6,9 +6,10 @@
 <style>
 #second {
     width: 100%;
-    display: contents;
     height: max-content;
     text-align: -webkit-center !important;
+    overflow: auto;
+    height: 100%;
 }
 
 #viewcontent {
@@ -19,9 +20,13 @@
     text-align: left;
     padding: 0 30 0 30;
 }
+.pagecontent {
+    overflow: hidden;
+}
 </style>
 <div id='editdiv' class="btn-group" style="float:right; display: none;">
-    <input name="viewid"  id="viewid"   hidden >
+    <input name="viewid"  id="viewid"   hidden1 >
+    <input name="scrollpos"  id="scrollpos"   hidden1 >
     <span  class="btn-group" style=" min-width: 100px;" >
         <button class="btn btn-secondary btn-sm" type="button" onclick="edit()">
             {{  user.username }} : Edit
@@ -29,7 +34,7 @@
     </span>
 </div>
 
-<div id="second" style="height: 100vh; overflow: auto;"  >
+<div id="second"  onscroll="scrollpos()" >
     <div id="viewcontent"></div>
 </div>
 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,6 +49,17 @@ function md2html(val, ext, div){
         geoui_setupMATHJAX(div.substring(1))
     }
     return html
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+function scrollpos(pos){
+    if ( !pos) {
+        var v =$('#second').scrollTop()
+        console.log(v)
+        $('#scrollpos').val(v)
+        saveZZValues()
+    } else {
+        $('#second').scrollTop($('#scrollpos').val())
+    }
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 function edit(viewid){
@@ -68,7 +84,6 @@ function viewCB(responseTxt, statusTxt, xhr, ctx, form){
     }
 
     md2html(val, $('#edit').val(), '#viewcontent' )
-    saveZZValues()
     //setTimeout(geoui_scrollTo, 50);
 
     //console.log('SUPER ----> {{ user.is_superuser }}')
@@ -82,6 +97,8 @@ function viewCB(responseTxt, statusTxt, xhr, ctx, form){
     if ( can_edit)
         $('#editdiv').show()
 
+    scrollpos(1)
+    //saveZZValues()
 }
 function view(viewid){
     const ctx = { viewid: viewid}
@@ -92,8 +109,9 @@ $(document).ready(function() {
     var urlp   = new URL(window.location.href)
     var viewid =  urlp.searchParams.get('viewid')  || urlp.searchParams.get('file') || ""
     restoreZZValues()
-    if (viewid)
+    if (viewid) {
         view(viewid)
+    }
 })
 </script>
 {% endblock %}
